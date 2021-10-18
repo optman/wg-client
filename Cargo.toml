@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-boringtun = {version="*", path="../../test/boringtun"}
+boringtun ={version="*", git="https://github.com/cloudflare/boringtun"}
 slog="*"
 slog-term="*"
 clap="*"

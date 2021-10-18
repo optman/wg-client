@@ -31,7 +31,7 @@ impl Client {
             dev: dev,
             socket: socket,
             tun: tun,
-            socket_dst_buf: [0u8; BUF_SIZE],
+            socket_dst_buf: [0; BUF_SIZE],
             logger: logger,
             last_connect: None,
         }
@@ -41,8 +41,8 @@ impl Client {
         self.socket.connect(self.config.remote_addr.clone()).await?;
         self.last_connect = Some(Instant::now());
 
-        let mut dev_buf = [0u8; BUF_SIZE];
-        let mut socket_src_buf = [0u8; BUF_SIZE];
+        let mut dev_buf = [0; BUF_SIZE];
+        let mut socket_src_buf = [0; BUF_SIZE];
 
         let mut timer = tokio::time::interval(Duration::from_millis(250));
         loop {

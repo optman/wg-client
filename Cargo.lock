@@ -79,6 +79,7 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 [[package]]
 name = "boringtun"
 version = "0.3.0"
+source = "git+https://github.com/cloudflare/boringtun#fbcf2689e7776a5af805c5a38feb5c8988829980"
 dependencies = [
  "base64",
  "clap",
