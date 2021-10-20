@@ -1,3 +1,4 @@
+use ipnet::IpNet;
 use slog::Level;
 
 pub(crate) struct Config {
@@ -11,4 +12,8 @@ pub(crate) struct Config {
     pub(crate) reconnect_timeout: Option<u16>,
     pub(crate) fwmark: Option<u32>,
     pub(crate) daemonize: Option<bool>,
+    pub(crate) addrs: Option<Vec<IpNet>>,
+    pub(crate) routes: Option<Vec<IpNet>>,
+    pub(crate) table: Option<String>,
+    pub(crate) metric: Option<String>,
 }

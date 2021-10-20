@@ -2,7 +2,7 @@ use boringtun::crypto::{X25519PublicKey, X25519SecretKey};
 use boringtun::noise::Tunn;
 use daemonize::Daemonize;
 use nix::sys::socket::{setsockopt, sockopt};
-use slog::{info, o, Drain, Logger};
+use slog::{debug, info, o, Drain, Logger};
 use std::error::Error;
 use std::os::unix::io::AsRawFd;
 use std::panic;
@@ -15,7 +15,7 @@ mod cli;
 mod config;
 use config::Config;
 mod util;
-use util::select_bind_addr;
+use util::{add_addr, add_route, select_bind_addr};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let orig_hook = panic::take_hook();
@@ -51,6 +51,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         None,
     )?;
     tun.set_logger(logger.new(o!()));
+
+    if let Some(ref addrs) = config.addrs {
+        for a in addrs {
+            debug!(logger, "add addr {}", a);
+            add_addr(a, &config.ifname)?;
+        }
+    }
+
+    if let Some(ref routes) = config.routes {
+        for r in routes {
+            debug!(logger, "add route {}", r);
+            add_route(r, &config.ifname, &config.table, &config.metric)?;
+        }
+    }
 
     info!(
         logger,

@@ -1,6 +1,7 @@
 use crate::config::Config;
 use boringtun::crypto::{X25519PublicKey, X25519SecretKey};
 use clap::{App, Arg};
+use ipnet::IpNet;
 use slog::Level;
 use std::error::Error;
 use std::result::Result;
@@ -25,6 +26,10 @@ pub(crate) fn parse() -> Result<Config, Box<dyn Error>> {
             .possible_values(&["error","warn", "info", "debug", "trace"])
             .default_value("info"))
         .arg(Arg::from_usage("-d, --daemon                        'run as daemon process'"))
+        .arg(Arg::from_usage("-a, --local-ips... [ip/prefix]      'add ipv4/ipv6 addr to local interface'"))
+        .arg(Arg::from_usage("-s, --allowed-ips... [network/prefix]  'remote allowed ips(for auto add route only)'"))
+        .arg(Arg::from_usage("-T, --table [table_name]            'route table for allowed ips'"))
+        .arg(Arg::from_usage("-M, --metric [metric]               'metric of the routes'"))
         .get_matches();
 
     let remote_addr: String = matches.value_of("remote").map(Into::into).unwrap();
@@ -80,6 +85,33 @@ pub(crate) fn parse() -> Result<Config, Box<dyn Error>> {
         None
     };
 
+    let addrs = match matches.values_of("local-ips") {
+        Some(ips) => {
+            let mut addrs = Vec::<IpNet>::new();
+            for i in ips {
+                addrs.push(i.parse()?);
+            }
+
+            Some(addrs)
+        }
+        None => None,
+    };
+
+    let routes = match matches.values_of("allowed-ips") {
+        Some(ips) => {
+            let mut addrs = Vec::<IpNet>::new();
+            for i in ips {
+                addrs.push(i.parse()?);
+            }
+
+            Some(addrs)
+        }
+        None => None,
+    };
+
+    let table = matches.value_of("table").map(Into::into);
+    let metric = matches.value_of("metric").map(Into::into);
+
     Ok(Config {
         local_private_key: private_key,
         remote_public_key: public_key,
@@ -91,5 +123,9 @@ pub(crate) fn parse() -> Result<Config, Box<dyn Error>> {
         fwmark: fwmark,
         log_level: log_level,
         daemonize: daemonize,
+        addrs: addrs,
+        routes: routes,
+        table: table,
+        metric: metric,
     })
 }
