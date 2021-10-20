@@ -24,6 +24,7 @@ pub(crate) fn parse() -> Result<Config, Box<dyn Error>> {
         .arg(Arg::from_usage("-v, --verbosity [log_level]         'log verbosity'")
             .possible_values(&["error","warn", "info", "debug", "trace"])
             .default_value("info"))
+        .arg(Arg::from_usage("-d, --daemon                        'run as daemon process'"))
         .get_matches();
 
     let remote_addr: String = matches.value_of("remote").map(Into::into).unwrap();
@@ -73,8 +74,13 @@ pub(crate) fn parse() -> Result<Config, Box<dyn Error>> {
         .parse()
         .map_err(|_| "invalid log verbosity")?;
 
+    let daemonize = if matches.is_present("daemon") {
+        Some(true)
+    } else {
+        None
+    };
+
     Ok(Config {
-        log_level: log_level,
         local_private_key: private_key,
         remote_public_key: public_key,
         remote_addr: remote_addr,
@@ -83,5 +89,7 @@ pub(crate) fn parse() -> Result<Config, Box<dyn Error>> {
         keepalive: keepalive,
         reconnect_timeout: reconnect_timeout,
         fwmark: fwmark,
+        log_level: log_level,
+        daemonize: daemonize,
     })
 }

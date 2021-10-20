@@ -10,4 +10,5 @@ pub(crate) struct Config {
     pub(crate) keepalive: Option<u16>,
     pub(crate) reconnect_timeout: Option<u16>,
     pub(crate) fwmark: Option<u32>,
+    pub(crate) daemonize: Option<bool>,
 }

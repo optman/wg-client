@@ -898,6 +898,7 @@ version = "0.1.0"
 dependencies = [
  "boringtun",
  "clap",
+ "daemonize",
  "nix",
  "slog",
  "slog-term",

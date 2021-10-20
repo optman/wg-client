@@ -1,5 +1,6 @@
 use boringtun::crypto::{X25519PublicKey, X25519SecretKey};
 use boringtun::noise::Tunn;
+use daemonize::Daemonize;
 use nix::sys::socket::{setsockopt, sockopt};
 use slog::{info, o, Drain, Logger};
 use std::error::Error;
@@ -12,11 +13,11 @@ mod client;
 use client::Client;
 mod cli;
 mod config;
+use config::Config;
 mod util;
 use util::select_bind_addr;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let orig_hook = panic::take_hook();
     panic::set_hook(Box::new(move |panic_info| {
         orig_hook(panic_info);
@@ -33,10 +34,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut dev_config = tun::configure();
     dev_config.mtu(config.mtu).name(&config.ifname).up();
-    let dev = tun::r#async::create_as_async(&dev_config)?;
+    let dev = tun::create(&dev_config)?;
 
     let listen_addr = select_bind_addr(&config.remote_addr)?;
-    let socket = UdpSocket::bind(listen_addr).await?;
+    let socket = std::net::UdpSocket::bind(listen_addr)?;
     if let Some(fwmark) = config.fwmark {
         setsockopt(socket.as_raw_fd(), sockopt::Mark, &fwmark)?;
     }
@@ -56,9 +57,27 @@ async fn main() -> Result<(), Box<dyn Error>> {
         "wg-client created tunnel to {}.", config.remote_addr
     );
 
-    Client::new(config, dev, socket, tun, logger.new(o!()))
-        .run()
-        .await?;
+    if let Some(true) = config.daemonize {
+        Daemonize::new().user("nobody").start()?;
+    }
+
+    run(config, dev, socket, tun, logger.new(o!()))?;
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn run(
+    config: Config,
+    dev: tun::platform::Device,
+    socket: std::net::UdpSocket,
+    tun: Box<Tunn>,
+    logger: Logger,
+) -> Result<(), Box<dyn Error>> {
+    let dev = tun::r#async::AsyncDevice::new(dev)?;
+    socket.set_nonblocking(true)?;
+    let socket = UdpSocket::from_std(socket)?;
+    Client::new(config, dev, socket, tun, logger).run().await?;
 
     Ok(())
 }

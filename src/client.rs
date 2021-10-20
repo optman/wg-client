@@ -1,6 +1,6 @@
 use crate::config::Config;
 use boringtun::noise::{errors::WireGuardError, Tunn, TunnResult};
-use slog::{debug, error, info, warn, Logger};
+use slog::{debug, error, info, trace, warn, Logger};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UdpSocket;
@@ -54,6 +54,7 @@ impl Client {
                    len = self.dev.read(&mut dev_buf) => {
                        match len{
                           Ok(len) => {
+                              trace!(self.logger, "tun read {} bytes", len);
                               self.local_recv(&dev_buf[..len]).await;
                           },
                           Err(e) => {
@@ -65,6 +66,7 @@ impl Client {
                    len = self.socket.recv(&mut socket_src_buf) => {
                        match len{
                           Ok(len) => {
+                              trace!(self.logger, "socket read {} bytes", len);
                               self.remote_recv(&socket_src_buf[..len]).await;
                           }
                           Err(e) => error!(self.logger, "socket read fail {:?}", e),
