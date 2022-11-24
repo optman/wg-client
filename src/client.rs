@@ -27,12 +27,12 @@ impl Client {
         logger: Logger,
     ) -> Self {
         Self {
-            config: config,
-            dev: dev,
-            socket: socket,
-            tun: tun,
+            config,
+            dev,
+            socket,
+            tun,
             socket_dst_buf: [0; BUF_SIZE],
-            logger: logger,
+            logger,
             last_connect: None,
         }
     }
